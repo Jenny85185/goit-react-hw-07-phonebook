@@ -1,39 +1,27 @@
-import { useGetContactsQuery } from '../../redux/Helpers';
-import { useState } from 'react';
-import css from './App.module.css';
-import ContactForm from '../ContactForm/ContactForm';
-import ContactList from '../ContactList/ContactList';
-import Filter from '../Filter/Filter';
+import { useGetContactsQuery } from 'redux/Helpers';
+import { ContactForm } from 'components/ContactForm/ContactForm';
+import { ContactList } from 'components/ContactList/ContactList';
+import { Filter } from 'components/Filter/Filter';
+import { Box } from 'components/box';
+import { Section } from 'components/Section/Section';
 
 export function App() {
-  const [filter, setFilter] = useState('');
-  const { data } = useGetContactsQuery();
-
-  const isVisibleContacts = () => {
-    if (data) {
-      if (data.length !== 0) {
-        return data.filter(contact =>
-          contact.name.toLowerCase().includes(filter.toLowerCase())
-        );
-      }
-    }
-    return;
-  };
-
-  const changeFilter = e => {
-    setFilter(e.target.value);
-  };
-
+  const { data: contacts, isLoading } = useGetContactsQuery();  
   return (
-    <div className={css.container}>
-      <h1 className={css.title}>Phonebook</h1>
-      <div className={css.wrap}>
+    <Box  display="flex" flexDirection="column" alignItems="center">
+      <Section title="PhoneBook">
         <ContactForm />
-      </div>
-      <h2 className={css.titleSection}>Contacts</h2>
-
-      <Filter filter={filter} onChange={changeFilter} />
-      <ContactList contacts={isVisibleContacts()} />
-    </div>
+      </Section>
+      <Section title="Contacts">
+        {isLoading && <b>Request in progress...</b>}
+        {contacts?.length > 0 && (
+          <>
+            <Filter />
+            
+            <ContactList />
+          </>
+        )}
+      </Section>
+    </Box>
   );
 }

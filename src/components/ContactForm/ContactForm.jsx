@@ -1,84 +1,72 @@
-import { useState } from 'react';
-import css from './ContactForm.module.css';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Button, Form } from './ContactForm.styled';
+import { Input, Label } from '../Filter/Filter.styled';
+import toast, { Toaster } from 'react-hot-toast';
 import {
-  useAddContactMutation,
   useGetContactsQuery,
+  useAddContactMutation,
 } from '../../redux/Helpers';
+import { Box } from '../box';
 
-export default function ContactForm() {
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-  const { data } = useGetContactsQuery();
+export function ContactForm() {
   const [addContact] = useAddContactMutation();
-
-  const handleChange = e => {
-    if (e.target.name === 'name') {
-      setName(e.target.value);
-    }
-
-    if (e.target.name === 'number') {
-      setNumber(e.target.value);
-    }
-  };
+  const { data: contacts } = useGetContactsQuery();
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (
-      data.find(
-        contact => contact.name.toLocaleLowerCase() === name.toLocaleLowerCase()
-      )
-    ) {
-      reset();
-      return toast.warning(`${name} alredy have`);
+    
+    const { name, mobile } = e.target.elements;
+    const form = e.currentTarget;
+    
+    if (name.value === '' || mobile.value === '') {
+      toast.error('Введите имя или телефон');
+      return;
     }
+    
+    const isInList = contacts.some(
+      contact => contact.name.toLowerCase() === name.value.toLowerCase()
+    );
 
-    if (name && number) {
-      await addContact({ name: name, phone: number });
-      toast.success(`Done`);
-      reset();
+    if (isInList) {
+      toast.error('Контакт уже есть в списке');
+      form.reset();
+      return;
     }
-  };
-
-  const reset = () => {
-    setName('');
-    setNumber('');
+    await addContact({ name: name.value, phone: mobile.value });
+    toast.success('Успешно добавлен');
+    form.reset();
   };
 
   return (
-    <form onSubmit={handleSubmit} className={css.form}>
-      <label className={css.label}>
-        <span className={css.nameForm}>Name</span>
-        {/* Name */}
-        <input
-          onChange={handleChange}
-          type="text"
+    <Form onSubmit={handleSubmit}>
+      <Toaster />
+      <Box display="flex" justifyContent="space-between" pl={2} pr={2}>
+        <Label>FullName</Label>
+        <Input
           name="name"
-          value={name}
-          placeholder={'GoIt manager'}
+          type="text"
+          placeholder="GoIt Manager"
+          //value={name}
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-          title="Name may contain only letters, apostrophe, dash and spaces.
-         For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          required
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          //onChange={e => setName(e.target.value)}
         />
-      </label>
-      <label className={css.label}>
-        Number
-        <input
-          onChange={handleChange}
+      </Box>
+      <Box display="flex" justifyContent="space-between" pl={2} pr={2}>
+        <Label>Number</Label>
+        <Input
+          name="mobile"
           type="tel"
-          name="number"
-          value={number}
-          placeholder={'+38063 567 56 64'}
+          placeholder="+38 063 605 55 55"
+          //value={mobile}
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-          title="Phone number must be digits and can contain spaces, dashes,
-         parentheses and can start with +"
-          required
+          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+          //onChange={e => setMobile(e.target.value)}
         />
-      </label>
-      <button type="submit">Add contact</button>
-      <ToastContainer theme="colored" autoClose={2000} />
-    </form>
+      </Box>
+      <Box display='flex' justifyContent="center">
+        <Button type="submit">Add contact</Button>
+        </Box>
+      
+    </Form>
   );
 }
